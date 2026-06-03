@@ -83,7 +83,7 @@ if (sucesso) {
       <ion-text class="ion-text-center ion-margin-top">
         <p>
           Não tem conta?
-          <router-link to="/register" class="ion-text-primary">
+          <router-link to="/cadastro" class="ion-text-primary">
             Cadastre-se
           </router-link>
         </p>
