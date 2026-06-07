@@ -1,30 +1,59 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import HomePage from '../views/HomePage.vue'
+import { useAuth } from '@/composables/useAuth.js';
 
 const routes: Array<RouteRecordRaw> = [
   {
-    path: '/',
-    redirect: '/home'
+    path: '/login',
+    name: 'Login',
+    component: () => import('../views/LoginPage.vue')
   },
   {
-    path: '/home',
-    name: 'Home',
-    component: HomePage
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/RegisterPage.vue')
+  },
+  {
+    path: '/reset',
+    name: 'ResetPassword',
+    component: () => import('../views/ResetPage.vue')
   },
   {
     path: '/album',
-    component: () => import('../views/AlbumPage.vue')
+    name: 'Album',
+    component: () => import('../views/AlbumPage.vue'),
+    meta: { requiresAuth: true }
   },
   {
-    path: '/login',
-    component: () => import('../views/LoginPage.vue')
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('../views/ProfilePage.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/',
+    redirect: '/album'
   }
 ]
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+})
+
+router.beforeEach((to, from, next) => {
+  const { isAuthenticated, obterUsuarioAtual } = useAuth()
+
+  if (to.meta.requiresAuth) {
+    obterUsuarioAtual()
+    if (isAuthenticated.value) {
+      next()
+    } else {
+      next('/login')
+    }
+  } else {
+    next()
+  }
 })
 
 export default router

@@ -1,0 +1,139 @@
+<template>
+  <ion-page>
+    <AppHeader />
+
+    <ion-content :fullscreen="true">
+      <ion-header collapse="condense">
+        <ion-toolbar>
+          <ion-title size="large">Perfil</ion-title>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-card class="ion-margin">
+        <ion-card-header>
+          <ion-card-title>Informações do Usuário</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <form @submit.prevent="handleSalvar">
+            <ion-item>
+              <ion-label position="floating">Nome Completo</ion-label>
+              <ion-input v-model="name" type="text" required></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="floating">E-mail</ion-label>
+              <ion-input v-model="email" type="email" required></ion-input>
+            </ion-item>
+
+            <ion-card class="ion-margin-top" color="light">
+              <ion-card-content>
+                <ion-text>
+                  <p><strong>ID do Usuário:</strong> {{ usuarioAtual?.id }}</p>
+                  <p><strong>Membro desde:</strong> Hoje</p>
+                </ion-text>
+              </ion-card-content>
+            </ion-card>
+
+            <ion-text v-if="mensagem" :color="mensagem.tipo === 'sucesso' ? 'success' : 'danger'" class="ion-padding">
+              <p>{{ mensagem.texto }}</p>
+            </ion-text>
+
+            <div class="ion-margin-top">
+              <ion-button expand="block" type="submit" color="primary">
+                <ion-icon slot="start" :icon="saveIcon"></ion-icon>
+                Salvar Alterações
+              </ion-button>
+              <ion-button expand="block" @click="voltarAlbum" color="medium">
+                <ion-icon slot="start" :icon="arrowBackIcon"></ion-icon>
+                Voltar
+              </ion-button>
+            </div>
+          </form>
+        </ion-card-content>
+      </ion-card>
+    </ion-content>
+  </ion-page>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
+import AppHeader from '../components/AppHeader.vue'
+import {
+  IonPage,
+  IonContent,
+  IonHeader,
+  IonToolbar,
+  IonTitle,
+  IonCard,
+  IonCardHeader,
+  IonCardTitle,
+  IonCardContent,
+  IonItem,
+  IonLabel,
+  IonInput,
+  IonButton,
+  IonIcon,
+  IonText,
+  toastController
+} from '@ionic/vue'
+import { save, arrowBack } from 'ionicons/icons'
+
+const router = useRouter()
+const { obterUsuarioAtual, atualizarPerfil } = useAuth()
+
+const name = ref('')
+const email = ref('')
+const usuarioAtual = ref(null)
+const mensagem = ref(null)
+
+const saveIcon = save
+const arrowBackIcon = arrowBack
+
+onMounted(() => {
+  const usuario = obterUsuarioAtual()
+  if (usuario) {
+    usuarioAtual.value = usuario
+    name.value = usuario.name
+    email.value = usuario.email
+  }
+})
+
+const handleSalvar = async () => {
+  const sucesso = atualizarPerfil(name.value, email.value)
+
+  if (sucesso) {
+    mensagem.value = {
+      tipo: 'sucesso',
+      texto: 'Perfil atualizado com sucesso!'
+    }
+    const toast = await toastController.create({
+      message: 'Perfil atualizado com sucesso!',
+      duration: 2000,
+      position: 'bottom',
+      color: 'success'
+    })
+    await toast.present()
+    setTimeout(() => {
+      mensagem.value = null
+    }, 3000)
+  } else {
+    mensagem.value = {
+      tipo: 'erro',
+      texto: 'Erro ao atualizar perfil'
+    }
+    const toast = await toastController.create({
+      message: 'Erro ao atualizar perfil',
+      duration: 2000,
+      position: 'bottom',
+      color: 'danger'
+    })
+    await toast.present()
+  }
+}
+
+const voltarAlbum = () => {
+  router.push('/album')
+}
+</script>

@@ -3,11 +3,11 @@
     <ion-content :fullscreen="true" class="ion-padding">
       <div class="ion-text-center ion-margin-top">
         <h1 class="text-4xl font-bold ion-margin">⚽ Álbum Copa</h1>
-        <p class="text-gray-600">Crie sua conta para começar</p>
+        <p class="text-gray-600">Recuperar Acesso</p>
       </div>
 
       <div class="ion-margin-top ion-margin-bottom">
-        <RegisterForm />
+        <ResetPasswordForm />
       </div>
     </ion-content>
   </ion-page>
@@ -15,5 +15,5 @@
 
 <script setup lang="ts">
 import { IonPage, IonContent } from '@ionic/vue'
-import RegisterForm from '../components/RegisterForm.vue'
+import ResetPasswordForm from '../components/ResetForm.vue'
 </script>
