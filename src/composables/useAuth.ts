@@ -41,10 +41,6 @@ export function useAuth() {
       return false
     }
 
-    if (password.length < 6) {
-      return false
-    }
-
     const newUser: User = {
       id: String(users.value.length + 1),
       name,

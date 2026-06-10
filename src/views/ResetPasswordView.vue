@@ -4,7 +4,7 @@
     <ion-header>
       <ion-toolbar color="primary">
         <ion-buttons slot="start">
-          <ion-back-button default-href="/login"></ion-back-button>
+          <ion-button @click="voltarParaLogin"></ion-button>
         </ion-buttons>
         <ion-title>Recuperar Senha</ion-title>
       </ion-toolbar>
@@ -157,7 +157,6 @@ import {
   IonToolbar,
   IonTitle,
   IonButtons,
-  IonBackButton,
   IonButton,
   IonIcon,
   IonCard,
@@ -283,6 +282,11 @@ const irParaLogin = async () => {
   email.value = "";
   await router.push("/login");
 };
+
+const voltarParaLogin = () => {
+  router.back();
+};
+
 </script>
 
 <style scoped>
