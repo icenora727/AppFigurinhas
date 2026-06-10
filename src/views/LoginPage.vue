@@ -25,7 +25,7 @@ const sucesso = login(email.value, password.value)
 if (sucesso) {
     const toast = await toastController.create({
       message: 'Login realizado com sucesso!',
-      duration: 2000,
+      duration: 800,
       position: 'bottom',
       color: 'success'
     })
@@ -35,7 +35,7 @@ if (sucesso) {
     erro.value = 'E-mail ou senha incorretos'
     const toast = await toastController.create({
       message: 'E-mail ou senha incorretos',
-      duration: 2000,
+      duration: 1000,
       position: 'bottom',
       color: 'danger'
     })
