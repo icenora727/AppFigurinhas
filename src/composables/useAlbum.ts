@@ -3,7 +3,7 @@ import { ref, computed } from "vue";
 interface Sticker {
   id: string;
   nome: string;
-  selecao: string;
+  raridade: string;
   foto: string;
   coletada: boolean;
 }
@@ -11,72 +11,72 @@ interface Sticker {
 const figurinhas = ref<Sticker[]>([
   {
     id: "1",
-    nome: "Neymar",
-    selecao: "Brasil",
-    foto: "https://via.placeholder.com/200?text=Neymar",
+    nome: "Tung Tung Sahur",
+    raridade: "Brasil",
+    foto: "https://upload.wikimedia.org/wikipedia/commons/1/19/Tung_tung_tung_sahur.webp",
     coletada: true,
   },
   {
     id: "2",
-    nome: "Vinicius Jr",
-    selecao: "Brasil",
-    foto: "https://via.placeholder.com/200?text=Vinicius",
+    nome: "Bombardino Crocodilo",
+    raridade: "Brasil",
+    foto: "https://i1.sndcdn.com/artworks-AtoLRjVHCEez03hb-gesM5Q-t1080x1080.png",
     coletada: false,
   },
   {
     id: "3",
-    nome: "Rodrygo",
-    selecao: "Brasil",
-    foto: "https://via.placeholder.com/200?text=Rodrygo",
+    nome: "Cappuccino Assassino",
+    raridade: "Brasil",
+    foto: "https://asset-metadata-service-production.s3.amazonaws.com/asset_icons/37d090671a35a113f5b4ea402ea1029e2ce2277e2f18e8602bf0b6782115ebcd.jpeg",
     coletada: true,
   },
   {
     id: "4",
-    nome: "Cristiano Ronaldo",
-    selecao: "Portugal",
-    foto: "https://via.placeholder.com/200?text=CR7",
+    nome: "Madin din din dun",
+    raridade: "Portugal",
+    foto: "https://media.sketchfab.com/models/4d90fef723fd4b18aea3ab253c013eb9/thumbnails/fe22f169e19c4425af392cf5ba8be48c/e7326c9539f643bb888f6aa0fc3f3ee2.jpeg",
     coletada: false,
   },
   {
     id: "5",
-    nome: "Bruno Fernandes",
-    selecao: "Portugal",
-    foto: "https://via.placeholder.com/200?text=Bruno",
+    nome: "Ballerina Cappuccina",
+    raridade: "Portugal",
+    foto: "https://i.scdn.co/image/ab67616d00001e020b0e45520decafc6e51cdadc",
     coletada: true,
   },
   {
     id: "6",
-    nome: "Messi",
-    selecao: "Argentina",
-    foto: "https://via.placeholder.com/200?text=Messi",
+    nome: "Brr brr patapim",
+    raridade: "Argentina",
+    foto: "https://i.scdn.co/image/ab67616d0000b273c98461c1dd6cc2d167f891ed",
     coletada: true,
   },
   {
     id: "7",
-    nome: "De Paul",
-    selecao: "Argentina",
-    foto: "https://via.placeholder.com/200?text=DePaul",
+    nome: "Tralalero Tralala",
+    raridade: "Argentina",
+    foto: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUl5kAsvGQPMYZnb3m2HsJYbXJbxW7PhnVrg&s",
     coletada: false,
   },
   {
     id: "8",
-    nome: "Lewandowski",
-    selecao: "Polônia",
-    foto: "https://via.placeholder.com/200?text=Lewa",
+    nome: "Chimpanzini Bananini",
+    raridade: "Polônia",
+    foto: "https://m.media-amazon.com/images/I/61-fYExJ09L._AC_UF350,350_QL50_.jpg",
     coletada: false,
   },
   {
     id: "9",
-    nome: "Müller",
-    selecao: "Alemanha",
-    foto: "https://via.placeholder.com/200?text=Muller",
+    nome: "Frigo Camello Buffo Fardelo",
+    raridade: "Alemanha",
+    foto: "https://i.scdn.co/image/ab67616d0000b27318fd8ca56e26196f90a03226",
     coletada: true,
   },
   {
     id: "10",
-    nome: "Mbappé",
-    selecao: "França",
-    foto: "https://via.placeholder.com/200?text=Mbappe",
+    nome: "Boneka Ambalabu",
+    raridade: "França",
+    foto: "https://fbi.cults3d.com/uploaders/25344900/illustration-file/1490d2dd-b7f3-4ff0-a99a-9954fbe1fb59/hq2.jpg",
     coletada: false,
   },
 ]);
@@ -98,7 +98,7 @@ const figurinhasFiltradas = computed(() => {
     resultado = resultado.filter(
       (f) =>
         f.nome.toLowerCase().includes(termo) ||
-        f.selecao.toLowerCase().includes(termo),
+        f.raridade.toLowerCase().includes(termo),
     );
   }
 
@@ -145,13 +145,8 @@ export function useAlbum() {
     filtroAtual.value = filtro;
   };
 
-  const obterFigurinhasPorSelecao = (selecao: string) => {
-    return figurinhas.value.filter((f) => f.selecao === selecao);
-  };
-
-  const obterSelecoes = () => {
-    const selecoes = new Set(figurinhas.value.map((f) => f.selecao));
-    return Array.from(selecoes).sort();
+  const obterFigurinhasPorRaridade = (selecao: string) => {
+    return figurinhas.value.filter((f) => f.raridade === selecao);
   };
 
   return {
@@ -168,7 +163,6 @@ export function useAlbum() {
     alternarColetada,
     pesquisar,
     definirFiltro,
-    obterFigurinhasPorSelecao,
-    obterSelecoes,
+    obterFigurinhasPorRaridade,
   };
 }
