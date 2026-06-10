@@ -7,7 +7,7 @@ interface User {
   password: string
 }
 
-const users = ref<User[]>([
+export const users = ref<User[]>([
   {
     id: '1',
     name: 'Usuário Teste',

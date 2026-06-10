@@ -86,7 +86,7 @@ if (sucesso) {
           </router-link>
         </p>
         <p>
-          <router-link to="/reset-password" class="ion-text-primary">
+          <router-link to="/reset" class="ion-text-primary">
             Esqueceu a senha?
           </router-link>
         </p>
