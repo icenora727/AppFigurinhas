@@ -32,7 +32,7 @@
             <ion-card class="ion-margin-top" color="light">
               <ion-card-content>
                 <ion-text>
-                  <p><strong>ID do Usuário:</strong> {{ usuarioAtual?.id }}</p>
+                  <p><strong>ID:</strong> {{ usuarioAtual?.id }}</p>
                   <p><strong>Membro desde:</strong> Hoje</p>
                 </ion-text>
               </ion-card-content>
@@ -42,12 +42,10 @@
               <p>{{ mensagem.texto }}</p>
             </ion-text>
 
-            <div class="ion-margin-top">
-              <ion-button expand="block" type="submit" color="primary">
-                <ion-icon slot="start" :icon="saveIcon"></ion-icon>
-                Salvar Alterações
-              </ion-button>
-            </div>
+            <ion-button expand="block" type="submit" color="primary" class="ion-margin-top">
+              <ion-icon slot="start" :icon="saveIcon"></ion-icon>
+              Salvar Alterações
+            </ion-button>
           </form>
         </ion-card-content>
       </ion-card>
@@ -57,7 +55,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useAuth } from '../composables/useAuth'
+import { useAuth } from '../../composables/useAuth'
 import {
   IonPage,
   IonContent,
@@ -102,10 +100,10 @@ const handleSalvar = async () => {
   if (sucesso) {
     mensagem.value = {
       tipo: 'sucesso',
-      texto: 'Perfil atualizado com sucesso!'
+      texto: 'Perfil atualizado!'
     }
     const toast = await toastController.create({
-      message: 'Perfil atualizado com sucesso!',
+      message: 'Perfil atualizado!',
       duration: 2000,
       position: 'bottom',
       color: 'success'
@@ -117,15 +115,8 @@ const handleSalvar = async () => {
   } else {
     mensagem.value = {
       tipo: 'erro',
-      texto: 'Erro ao atualizar perfil'
+      texto: 'Erro ao atualizar'
     }
-    const toast = await toastController.create({
-      message: 'Erro ao atualizar perfil',
-      duration: 2000,
-      position: 'bottom',
-      color: 'danger'
-    })
-    await toast.present()
   }
 }
 </script>

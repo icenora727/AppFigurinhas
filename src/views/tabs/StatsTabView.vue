@@ -15,36 +15,32 @@
 
       <ion-card class="ion-margin">
         <ion-card-header>
-          <ion-card-title>Resumo Geral</ion-card-title>
+          <ion-card-title>Progresso Geral</ion-card-title>
         </ion-card-header>
         <ion-card-content>
-          <ion-grid>
-            <ion-row>
-              <ion-col size="12">
-                <ion-text>
-                  <h3>Progresso Geral</h3>
-                  <p class="ion-margin-top">{{ percentualCompleto }}% completo</p>
-                </ion-text>
-                <ion-progress-bar :value="percentualCompleto / 100" color="success"></ion-progress-bar>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
+          <ion-text>
+            <h3>{{ percentualCompleto }}% completo</h3>
+          </ion-text>
+          <ion-progress-bar :value="percentualCompleto / 100" color="success" class="ion-margin-top"></ion-progress-bar>
+          <ion-text class="ion-margin-top">
+            <p>{{ figurinhasColetadas }} de {{ totalFigurinhas }} figurinhas coletadas</p>
+          </ion-text>
         </ion-card-content>
       </ion-card>
 
       <ion-card class="ion-margin">
         <ion-card-header>
-          <ion-card-title>Figurinhas por Seleção</ion-card-title>
+          <ion-card-title>Por Seleção</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-list>
             <ion-item v-for="selecao in obterSelecoes()" :key="selecao">
               <ion-label>
                 <h3>{{ selecao }}</h3>
-                <p>{{ obterFigurinhasPorSelecao(selecao).length }} figurinhas</p>
+                <p>{{ obterFigurinhasPorSelecao(selecao).filter(f => f.coletada).length }} de {{ obterFigurinhasPorSelecao(selecao).length }}</p>
               </ion-label>
               <ion-badge slot="end" color="primary">
-                {{ obterFigurinhasPorSelecao(selecao).filter(f => f.coletada).length }}/{{ obterFigurinhasPorSelecao(selecao).length }}
+                {{ Math.round((obterFigurinhasPorSelecao(selecao).filter(f => f.coletada).length / obterFigurinhasPorSelecao(selecao).length) * 100) }}%
               </ion-badge>
             </ion-item>
           </ion-list>
@@ -53,7 +49,7 @@
 
       <ion-card class="ion-margin">
         <ion-card-header>
-          <ion-card-title>Resumo Rápido</ion-card-title>
+          <ion-card-title>Resumo</ion-card-title>
         </ion-card-header>
         <ion-card-content>
           <ion-grid>
@@ -83,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAlbum } from '../composables/useAlbum'
+import { useAlbum } from '../../composables/useAlbum'
 import {
   IonPage,
   IonContent,
@@ -94,16 +90,22 @@ import {
   IonCardHeader,
   IonCardTitle,
   IonCardContent,
-  IonGrid,
-  IonRow,
-  IonCol,
   IonText,
   IonProgressBar,
   IonList,
   IonItem,
   IonLabel,
-  IonBadge
+  IonBadge,
+  IonGrid,
+  IonRow,
+  IonCol
 } from '@ionic/vue'
 
-const { totalFigurinhas, figurinhasColetadas, percentualCompleto, obterFigurinhasPorSelecao, obterSelecoes } = useAlbum()
+const {
+  totalFigurinhas,
+  figurinhasColetadas,
+  percentualCompleto,
+  obterFigurinhasPorSelecao,
+  obterSelecoes
+} = useAlbum()
 </script>

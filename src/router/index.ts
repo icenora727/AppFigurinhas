@@ -5,49 +5,48 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('../views/LoginPage.vue')
+    component: () => import('../views/LoginView.vue')
   },
   {
     path: '/register',
     name: 'Register',
-    component: () => import('../views/RegisterPage.vue')
+    component: () => import('../views/RegisterView.vue')
   },
   {
     path: '/reset-password',
     name: 'ResetPassword',
-    component: () => import('../views/ResetPage.vue')
+    component: () => import('../views/ResetPasswordView.vue')
   },
   {
     path: '/tabs',
+    name: 'Tabs',
     component: () => import('../views/TabsView.vue'),
     meta: { requiresAuth: true },
     children: [
       {
-        path: 'album',
-        name: 'Album',
-        component: () => import('../views/AlbumPage.vue')
+        path: '',
+        redirect: 'album'
       },
       {
-        path: 'profile',
-        name: 'Profile',
-        component: () => import('../views/ProfilePage.vue')
+        path: 'album',
+        name: 'Album',
+        component: () => import('../views/tabs/AlbumTabView.vue')
       },
       {
         path: 'stats',
         name: 'Stats',
-        component: () => import('../views/StatsView.vue')
+        component: () => import('../views/tabs/StatsTabView.vue')
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('../views/tabs/ProfileTabView.vue')
       }
     ]
   },
   {
-    path: '/',
-    redirect: (to) => {
-      const { obterUsuarioAtual } = useAuth()
-      if (obterUsuarioAtual()) {
-        return '/tabs/album'
-      }
-      return '/login'
-    }
+    path: '/:pathMatch(.*)*',
+    redirect: '/tabs/album'
   }
 ]
 

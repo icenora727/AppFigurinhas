@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <ion-header>
     <ion-toolbar color="primary">
       <ion-title>⚽ Álbum Copa</ion-title>
@@ -94,4 +94,4 @@ const handleLogout = async () => {
   await toast.present()
   router.push('/login')
 }
-</script>
+</script> -->
