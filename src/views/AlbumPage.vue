@@ -1,6 +1,15 @@
 <template>
   <ion-page>
-    <AppHeader />
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Seu Álbum</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="handleLogout">
+            <ion-icon slot="icon-only" :icon="logOutIcon"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
 
     <ion-content :fullscreen="true">
       <ion-header collapse="condense">
@@ -53,8 +62,9 @@
 </template>
 
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 import { useAlbum } from '../composables/useAlbum'
-import AppHeader from '../components/AppHeader.vue'
 import StickerList from '../components/StickerList.vue'
 import {
   IonPage,
@@ -62,6 +72,9 @@ import {
   IonHeader,
   IonToolbar,
   IonTitle,
+  IonButtons,
+  IonButton,
+  IonIcon,
   IonCard,
   IonCardHeader,
   IonCardTitle,
@@ -70,8 +83,26 @@ import {
   IonRow,
   IonCol,
   IonText,
-  IonProgressBar
+  IonProgressBar,
+  toastController
 } from '@ionic/vue'
+import { logOut } from 'ionicons/icons'
 
+const router = useRouter()
+const { logout } = useAuth()
 const { totalFigurinhas, figurinhasColetadas, percentualCompleto } = useAlbum()
+
+const logOutIcon = logOut
+
+const handleLogout = async () => {
+  logout()
+  const toast = await toastController.create({
+    message: 'Logout realizado com sucesso!',
+    duration: 2000,
+    position: 'bottom',
+    color: 'success'
+  })
+  await toast.present()
+  await router.push('/login')
+}
 </script>

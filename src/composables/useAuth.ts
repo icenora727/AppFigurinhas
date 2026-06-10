@@ -11,8 +11,8 @@ const users = ref<User[]>([
   {
     id: '1',
     name: 'Usuário Teste',
-    email: 'teste@email.com',
-    password: '123456'
+    email: 'a',
+    password: 'a'
   }
 ])
 
@@ -25,6 +25,7 @@ export function useAuth() {
     if (user) {
       currentUser.value = { ...user }
       localStorage.setItem('currentUser', JSON.stringify(currentUser.value))
+      localStorage.setItem('isAuthenticated', 'true')
       return true
     }
     return false
@@ -33,6 +34,7 @@ export function useAuth() {
   const logout = () => {
     currentUser.value = null
     localStorage.removeItem('currentUser')
+    localStorage.removeItem('isAuthenticated')
   }
 
   const cadastrar = (name: string, email: string, password: string): boolean => {
@@ -55,6 +57,7 @@ export function useAuth() {
     users.value.push(newUser)
     currentUser.value = { ...newUser }
     localStorage.setItem('currentUser', JSON.stringify(currentUser.value))
+    localStorage.setItem('isAuthenticated', 'true')
     return true
   }
 
@@ -70,7 +73,8 @@ export function useAuth() {
   const obterUsuarioAtual = () => {
     if (!currentUser.value) {
       const stored = localStorage.getItem('currentUser')
-      if (stored) {
+      const isAuth = localStorage.getItem('isAuthenticated')
+      if (stored && isAuth === 'true') {
         currentUser.value = JSON.parse(stored)
       }
     }

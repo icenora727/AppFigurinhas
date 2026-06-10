@@ -1,6 +1,5 @@
-import { createRouter, createWebHistory } from '@ionic/vue-router';
-import { RouteRecordRaw } from 'vue-router';
-import { useAuth } from '@/composables/useAuth.js';
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import { useAuth } from '../composables/useAuth'
 
 const routes: Array<RouteRecordRaw> = [
   {
@@ -14,39 +13,55 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/RegisterPage.vue')
   },
   {
-    path: '/reset',
+    path: '/reset-password',
     name: 'ResetPassword',
     component: () => import('../views/ResetPage.vue')
   },
   {
-    path: '/album',
-    name: 'Album',
-    component: () => import('../views/AlbumPage.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/profile',
-    name: 'Profile',
-    component: () => import('../views/ProfilePage.vue'),
-    meta: { requiresAuth: true }
+    path: '/tabs',
+    component: () => import('../views/TabsView.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: 'album',
+        name: 'Album',
+        component: () => import('../views/AlbumPage.vue')
+      },
+      {
+        path: 'profile',
+        name: 'Profile',
+        component: () => import('../views/ProfilePage.vue')
+      },
+      {
+        path: 'stats',
+        name: 'Stats',
+        component: () => import('../views/StatsView.vue')
+      }
+    ]
   },
   {
     path: '/',
-    redirect: '/album'
+    redirect: (to) => {
+      const { obterUsuarioAtual } = useAuth()
+      if (obterUsuarioAtual()) {
+        return '/tabs/album'
+      }
+      return '/login'
+    }
   }
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes
 })
 
 router.beforeEach((to, from, next) => {
-  const { isAuthenticated, obterUsuarioAtual } = useAuth()
-
+  const { obterUsuarioAtual } = useAuth()
+  
   if (to.meta.requiresAuth) {
-    obterUsuarioAtual()
-    if (isAuthenticated.value) {
+    const usuario = obterUsuarioAtual()
+    if (usuario) {
       next()
     } else {
       next('/login')

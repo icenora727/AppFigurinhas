@@ -1,6 +1,10 @@
 <template>
   <ion-page>
-    <AppHeader />
+    <ion-header>
+      <ion-toolbar color="primary">
+        <ion-title>Perfil</ion-title>
+      </ion-toolbar>
+    </ion-header>
 
     <ion-content :fullscreen="true">
       <ion-header collapse="condense">
@@ -43,10 +47,6 @@
                 <ion-icon slot="start" :icon="saveIcon"></ion-icon>
                 Salvar Alterações
               </ion-button>
-              <ion-button expand="block" @click="voltarAlbum" color="medium">
-                <ion-icon slot="start" :icon="arrowBackIcon"></ion-icon>
-                Voltar
-              </ion-button>
             </div>
           </form>
         </ion-card-content>
@@ -57,9 +57,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { useAuth } from '../composables/useAuth'
-import AppHeader from '../components/AppHeader.vue'
 import {
   IonPage,
   IonContent,
@@ -78,9 +76,8 @@ import {
   IonText,
   toastController
 } from '@ionic/vue'
-import { save, arrowBack } from 'ionicons/icons'
+import { save } from 'ionicons/icons'
 
-const router = useRouter()
 const { obterUsuarioAtual, atualizarPerfil } = useAuth()
 
 const name = ref('')
@@ -89,7 +86,6 @@ const usuarioAtual = ref(null)
 const mensagem = ref(null)
 
 const saveIcon = save
-const arrowBackIcon = arrowBack
 
 onMounted(() => {
   const usuario = obterUsuarioAtual()
@@ -131,9 +127,5 @@ const handleSalvar = async () => {
     })
     await toast.present()
   }
-}
-
-const voltarAlbum = () => {
-  router.push('/album')
 }
 </script>

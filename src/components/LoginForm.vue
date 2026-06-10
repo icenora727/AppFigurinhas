@@ -88,12 +88,17 @@ const handleLogin = async () => {
   if (sucesso) {
     const toast = await toastController.create({
       message: 'Login realizado com sucesso!',
-      duration: 2000,
+      duration: 1500,
       position: 'bottom',
       color: 'success'
     })
     await toast.present()
-    router.push('/album')
+    
+    // Aguarda o toast desaparecer antes de redirecionar
+    await new Promise(resolve => setTimeout(resolve, 1600))
+    
+    // Redireciona para o álbum
+    await router.push('/album')
   } else {
     erro.value = 'E-mail ou senha incorretos'
     const toast = await toastController.create({
