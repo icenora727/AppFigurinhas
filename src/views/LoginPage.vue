@@ -30,7 +30,7 @@ if (sucesso) {
       color: 'success'
     })
     await toast.present()
-    router.push('/album')
+    router.replace('/tabs')
 } else {
     erro.value = 'E-mail ou senha incorretos'
     const toast = await toastController.create({
@@ -55,7 +55,6 @@ if (sucesso) {
           <ion-label position="floating">E-mail</ion-label>
           <ion-input
             v-model="email"
-            type="email"
             required
             placeholder="seu@email.com"
           ></ion-input>
@@ -65,7 +64,6 @@ if (sucesso) {
           <ion-label position="floating">Senha</ion-label>
           <ion-input
             v-model="password"
-            type="password"
             required
             placeholder="••••••"
           ></ion-input>

@@ -11,8 +11,8 @@ const users = ref<User[]>([
   {
     id: '1',
     name: 'Usuário Teste',
-    email: 'teste@email.com',
-    password: '123456'
+    email: 'a',
+    password: 'a'
   }
 ])
 
