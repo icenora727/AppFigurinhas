@@ -20,6 +20,7 @@ export async function initDatabase() {
       );`)
 
     await db.execute(`CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
         login TEXT NOT NULL,
         senha TEXT
@@ -86,7 +87,7 @@ export async function realizarLogin(email: string, senha: string) {
   return result.values || []
 }
 
-export async function updateUsuario(nome:string, login:string, senha:string) {
-    const query = `UPDATE usuarios SET login = ?, senha = ?, WHERE nome = ?`
-    await db.run(query, [login, senha, nome])
+export async function updateUsuario(nome:string, login:string, senha:string, id: number) {
+    const query = `UPDATE usuarios SET nome = ?, login = ?, senha = ?, WHERE id = ?`
+    await db.run(query, [nome, login, senha, id])
 }
