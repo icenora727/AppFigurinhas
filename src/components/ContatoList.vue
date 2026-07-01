@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { listContatos, updateContato, deleteContatoById } from '@/services/database';
-import { IonItemOption, IonItemOptions, IonItemSliding } from '@ionic/vue';
+import { IonItemOption, IonItemOptions, IonItemSliding, IonList, IonItem, IonLabel, IonAlert } from '@ionic/vue';
 
 const contatos = ref<any[]>([])
 const editAlert = ref({ open: false, error: '', data: {id: null as number | null, nome: '', email: '', telefone: ''}  })
