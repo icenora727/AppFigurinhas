@@ -34,7 +34,7 @@
     />
 
     <IonAlert
-        :is-open="editAlert.open"
+        :is-open="deleteAlert.open"
         header="Excluir contato"
         message="Tem certeza que deseja excluir esse contato?"
         :buttons="[
@@ -108,7 +108,7 @@ async function salvarEdicao(values:any) {
     }
 
     editAlert.value.error = ''
-    await updateContato(editAlert.value.data.id, nome, email, telefone)
+    await updateContato(editAlert.value.data.id, nome, email, telefone);
     closeEditAlert()
     load()
     return true

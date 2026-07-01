@@ -93,7 +93,7 @@ export async function deleteContatoById(id: number) {
 
 export async function updateContato(id: number, nome: string, email: string, telefone: string) {
   await ensureDatabase()
-  const query = `UPDATE contatos SET nome = ?, email = ?, telefone = ?, WHERE id = ?;`
+  const query = `UPDATE contatos SET nome = ?, email = ?, telefone = ? WHERE id = ?;`
   await getDb().run(query, [nome, email, telefone, id])
 }
 

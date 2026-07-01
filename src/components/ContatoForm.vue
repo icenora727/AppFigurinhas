@@ -64,7 +64,8 @@ async function salvarContato() {
     form.telefone = ''
     toast.show = true
     toast.message = 'Contato salvo com sucesso.'
-    window.dispatchEvent(new CustomEvent('contato-alvo'))
+    window.dispatchEvent(new CustomEvent('contato-salvo'))
 }
+
 
 </script>
