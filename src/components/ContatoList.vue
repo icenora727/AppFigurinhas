@@ -1,9 +1,53 @@
 <template>
+    <IonList>
+        <template v-if="contatos.length">
+            <IonItemSliding v-for="contato in contatos" :key="contato.id">
+                <IonItem>
+                    <IonLabel>
+                        <h2>{{ contato.nome }}</h2>
+                        <p>{{ contato.email }}</p>
+                        <p>{{ contato.telefone }}</p>
+                    </IonLabel>
+                </IonItem>
+
+                <IonItemOptions side="end">
+                    <IonItemOption color="primary" @click="editarContato(contato)">Editar</IonItemOption>
+                    <IonItemOption color="danger" @click="confirmarExclusao(contato)">Excluir</IonItemOption>
+                </IonItemOptions>
+
+            </IonItemSliding>
+        </template>
+        <IonItem v-else>
+            <IonLabel>Nenhum contato encontrado.</IonLabel>
+        </IonItem>
+    </IonList>
+
+    <IonAlert
+        :is-open="editAlert.open"
+        header="Editar contato"
+        :message="editAlert.error"
+        :inputs="editInputs"
+        :buttons="[
+            { text: 'Cancelar', role: 'cancel', handler: closeEditAlert },
+            { text: 'Salvar', handler: salvarEdicao }
+        ]"
+    />
+
+    <IonAlert
+        :is-open="editAlert.open"
+        header="Excluir contato"
+        message="Tem certeza que deseja excluir esse contato?"
+        :buttons="[
+            { text: 'Cancelar', role: 'cancel', handler: closeDeleteAlert },
+            { text: 'Excluir', role: 'destructive', handler: excluirContato }
+        ]"
+    />
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { listContatos, updateContato, deleteContatoById } from '@/services/database';
+import { IonItemOption, IonItemOptions, IonItemSliding } from '@ionic/vue';
 
 const contatos = ref<any[]>([])
 const editAlert = ref({ open: false, error: '', data: {id: null as number | null, nome: '', email: '', telefone: ''}  })
