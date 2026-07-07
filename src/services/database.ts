@@ -62,7 +62,7 @@ export async function addUsuario(
 
 export async function updateUsuario(nome:string, login:string, senha:string, id: number) {
   await ensureDatabase()
-  const query = `UPDATE usuarios SET nome = ?, login = ?, senha = ?, WHERE id = ?`
+  const query = `UPDATE usuarios SET nome = ?, login = ?, senha = ? WHERE id = ?`
   await getDb().run(query, [nome, login, senha, id])
 }
 
