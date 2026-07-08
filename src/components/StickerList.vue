@@ -39,7 +39,7 @@
 </template>
 
 <script setup lang="ts">
-import { useAlbum } from '../composables/useAlbum'
+import { useAlbum } from '../services/database'
 import StickerCard from './StickerCard.vue'
 import {
   IonContent,

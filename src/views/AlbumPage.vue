@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonCol, IonContent, IonGrid, IonHeader, IonPage, IonProgressBar, IonRow, IonText, IonTitle, IonToolbar } from '@ionic/vue';
 
-import { useAlbum } from '../composables/useAlbum'
+import { useAlbum } from '../services/database'
 import StickerList from '../components/StickerList.vue'
 
 const { todasFig, qtdFigurinhasColetadas, percentualCompleto } = useAlbum()
