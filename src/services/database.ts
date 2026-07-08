@@ -33,13 +33,6 @@ async function ensureDatabase() {
 
   initialized = true
 }
- 
-function getDb() {
-  if (!db) {
-    throw new Error('Banco de dados ainda não inicializado')
-  }
-  return db
-}
 
 export async function initDatabase() {
   try {
@@ -49,6 +42,15 @@ export async function initDatabase() {
     throw error
   }
 }
+
+function getDb() {
+  if (!db) {
+    throw new Error('Banco de dados ainda não inicializado')
+  }
+  return db
+}
+
+// ======================= USUARIO E CONTATO ==============================
 
 export async function addUsuario(
   nome: string,
@@ -103,3 +105,6 @@ export async function findContatoById(id:number) {
   const result = await getDb().query(query,[id])
   return result.values || []
 }
+
+// ======================= FIGURINHAS ==============================
+

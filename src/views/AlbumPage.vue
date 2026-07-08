@@ -4,7 +4,9 @@ import { IonCard, IonCardContent, IonCardHeader, IonCardTitle, IonCol, IonConten
 import { useAlbum } from '../composables/useAlbum'
 import StickerList from '../components/StickerList.vue'
 
-const { totalFigurinhas, figurinhasColetadas, percentualCompleto } = useAlbum()
+const { todasFig, qtdFigurinhasColetadas, percentualCompleto } = useAlbum()
+
+
 </script>
 
 <template>
@@ -28,7 +30,7 @@ const { totalFigurinhas, figurinhasColetadas, percentualCompleto } = useAlbum()
                             <IonCol size="12" size-sm="6" size-md="4">
                                 <div class="ion-text-center">
                                     <IonText color="primary">
-                                        <h2>{{ totalFigurinhas }}</h2>
+                                        <h2>{{ todasFig.length }}</h2>
                                         <p>Total de Figurinhas</p>
                                     </IonText>
                                 </div>
@@ -36,7 +38,7 @@ const { totalFigurinhas, figurinhasColetadas, percentualCompleto } = useAlbum()
                             <IonCol size="12" size-sm="6" size-md="4">
                                 <div class="ion-text-center">
                                     <IonText color="success">
-                                        <h2>{{ figurinhasColetadas }}</h2>
+                                        <h2>{{ qtdFigurinhasColetadas }}</h2>
                                         <p>Coletadas</p>
                                     </IonText>
                                 </div>

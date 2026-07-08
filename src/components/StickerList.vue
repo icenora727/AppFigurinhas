@@ -2,13 +2,13 @@
   <ion-content>
     <ion-segment v-model="filtroAtual" @ion-change="definirFiltro(filtroAtual)" class="ion-margin">
       <ion-segment-button value="todas">
-        <ion-label>Todas ({{ totalFigurinhas }})</ion-label>
+        <ion-label>Todas ({{ qtdTodasFig }})</ion-label>
       </ion-segment-button>
       <ion-segment-button value="coletadas">
-        <ion-label>Coletadas ({{ figurinhasColetadas }})</ion-label>
+        <ion-label>Coletadas ({{ qtdFigurinhasColetadas }})</ion-label>
       </ion-segment-button>
       <ion-segment-button value="pendentes">
-        <ion-label>Pendentes ({{ totalFigurinhas - figurinhasColetadas }})</ion-label>
+        <ion-label>Pendentes ({{ qtdTodasFig - qtdFigurinhasColetadas }})</ion-label>
       </ion-segment-button>
     </ion-segment>
 
@@ -57,8 +57,8 @@ const {
   figurinhasFiltradas,
   filtroAtual,
   termoPesquisa,
-  totalFigurinhas,
-  figurinhasColetadas,
+  qtdTodasFig,
+  qtdFigurinhasColetadas,
   marcarColetada,
   marcarPendente,
   alternarColetada,

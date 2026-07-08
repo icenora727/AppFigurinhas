@@ -3,7 +3,7 @@ import {
   SQLiteConnection,
   SQLiteDBConnection,
 } from "@capacitor-community/sqlite";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 
 const dbName = "bancoFigurinhas";
 let db: SQLiteDBConnection | null = null;
@@ -151,6 +151,35 @@ async function toggleColetada(id: number) {
   SET coletada = NOT coletada
   WHERE id = ?
   `;
+
+  await getDb().run(query, [id]);
+
+  await carregarFigurinhas();
+}
+
+async function apenasColetar(id:number) {
+  await ensureDatabase();
+
+  const query = `
+  UPDATE figurinhas
+  SET coletada = TRUE
+  WHERE id = ?
+  `;
+
+  await getDb().run(query, [id]);
+
+  await carregarFigurinhas();
+}
+
+async function apenasDescoletar(id:number) {
+  await ensureDatabase();
+
+  const query = `
+  UPDATE figurinhas
+  SET coletada = FALSE
+  WHERE id = ?
+  `;
+
   await getDb().run(query, [id]);
 
   await carregarFigurinhas();
@@ -160,7 +189,7 @@ const filtroAtual = ref<"todas" | "coletadas" | "pendentes">("todas");
 const termoPesquisa = ref("");
 
 const figurinhasFiltradas = computed(() => {
-  let resultado = todasFig.value;
+  let resultado = [...todasFig.value];
 
   if (filtroAtual.value === "coletadas") {
     resultado = resultado.filter((f) => f.coletada);
@@ -180,34 +209,36 @@ const figurinhasFiltradas = computed(() => {
   return resultado;
 });
 
-const qtdTotalFigurinhas = async () => {
-  const total = await getDb().query(
-    "SELECT COUNT(*) as total FROM figurinhas"
-  );
+const qtdTodasFig = computed(() => todasFig.value.length);
 
-  return total.values?.[0].total ?? 0;
-};
+const qtdFigurinhasColetadas = computed(
+  () => todasFig.value.filter(f => f.coletada).length
+  )
 
-const qtdFigurinhasColetadas = async () => {
-  const result = await getDb().query(
-    "SELECT COUNT(*) AS total FROM figurinhas WHERE coletada = 1"
-  );
+const percentualCompleto = computed(() => {
+  if (qtdTodasFig.value === 0) return 0;
 
-  return result.values?.[0].total ?? 0;
-}
-
-const percentualCompleto = async () => {
-  const total = await qtdTotalFigurinhas();
-  const coletadas = await qtdFigurinhasColetadas();
-
-  if (total === 0) return 0;
-
-  return Math.round((coletadas / total) * 100);
-};
+  return Math.round(
+    qtdFigurinhasColetadas.value * 100 / qtdTodasFig.value
+  )
+})
 
 export function useAlbum() {
+  onMounted(async () => {
+    await carregarFigurinhas();
+  });
+
+
   const alternarColetada = async (id: number) => {
     await toggleColetada(id);
+  };
+
+  const marcarColetada = async (id: number) => {
+    await apenasColetar(id);
+  };
+
+  const marcarPendente = async (id: number) => {
+    await apenasDescoletar(id);
   };
 
   const pesquisar = (termo: string) => {
@@ -223,11 +254,13 @@ export function useAlbum() {
     filtroAtual,
     termoPesquisa,
     todasFig,
-    qtdTotalFigurinhas,
+    qtdTodasFig,
     qtdFigurinhasColetadas,
     percentualCompleto,
     alternarColetada,
+    marcarColetada,
+    marcarPendente,
     pesquisar,
     definirFiltro,
-  };
+  }
 }
