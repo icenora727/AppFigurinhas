@@ -1,91 +1,132 @@
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
+import {
+  addUsuario,
+  findUsuarioById,
+  findUsuarioByLogin,
+  realizarLogin,
+  resetarSenhaUsuario,
+  updateUsuario,
+} from '@/services/database'
 
 interface User {
-  id: string
+  id: number
   name: string
   email: string
   password: string
 }
 
-export const users = ref<User[]>([
-  {
-    id: '1',
-    name: 'Usuário Teste',
-    email: 'a',
-    password: 'a'
+function carregarUsuarioPersistido(): User | null {
+  if (typeof localStorage === 'undefined') {
+    return null
   }
-])
 
-const currentUser = ref<User | null>(null)
+  const armazenado = localStorage.getItem('currentUser')
+  if (!armazenado) {
+    return null
+  }
+
+  try {
+    return JSON.parse(armazenado) as User
+  } catch {
+    return null
+  }
+}
+
+const currentUser = ref<User | null>(carregarUsuarioPersistido())
 const isAuthenticated = computed(() => currentUser.value !== null)
 
+function salvarUsuarioAtual(usuario: User | null) {
+  if (typeof localStorage === 'undefined') {
+    return
+  }
+
+  if (usuario) {
+    localStorage.setItem('currentUser', JSON.stringify(usuario))
+    return
+  }
+
+  localStorage.removeItem('currentUser')
+}
+
+function converterUsuarioBanco(usuario: { id: number; nome: string; login: string; senha: string }) {
+  return {
+    id: usuario.id,
+    name: usuario.nome,
+    email: usuario.login,
+    password: usuario.senha,
+  }
+}
+
 export function useAuth() {
-  const login = (email: string, password: string): boolean => {
-    const user = users.value.find(u => u.email === email && u.password === password)
-    if (user) {
-      currentUser.value = { ...user }
-      localStorage.setItem('currentUser', JSON.stringify(currentUser.value))
-      return true
+  const login = async (email: string, password: string): Promise<boolean> => {
+    const usuario = await realizarLogin(email, password)
+
+    if (!usuario) {
+      return false
     }
-    return false
+
+    currentUser.value = converterUsuarioBanco(usuario)
+    salvarUsuarioAtual(currentUser.value)
+    return true
   }
 
   const logout = () => {
     currentUser.value = null
-    localStorage.removeItem('currentUser')
+    salvarUsuarioAtual(null)
   }
 
-  const cadastrar = (name: string, email: string, password: string): boolean => {
-    const userExists = users.value.some(u => u.email === email)
-    if (userExists) {
+  const cadastrar = async (name: string, email: string, password: string): Promise<boolean> => {
+    const usuarioExistente = await findUsuarioByLogin(email)
+    if (usuarioExistente) {
       return false
     }
 
-    const newUser: User = {
-      id: String(users.value.length + 1),
-      name,
-      email,
-      password
+    await addUsuario(name, email, password)
+
+    const novoUsuario = await findUsuarioByLogin(email)
+    if (!novoUsuario) {
+      return false
     }
 
-    users.value.push(newUser)
-    currentUser.value = { ...newUser }
-    localStorage.setItem('currentUser', JSON.stringify(currentUser.value))
+    currentUser.value = converterUsuarioBanco(novoUsuario)
+    salvarUsuarioAtual(currentUser.value)
     return true
   }
 
-  const resetarSenha = (email: string, novaSenha: string): boolean => {
-    const user = users.value.find(u => u.email === email)
-    if (user && novaSenha.length >= 6) {
-      user.password = novaSenha
-      return true
+  const resetarSenha = async (email: string, novaSenha: string): Promise<boolean> => {
+    if (novaSenha.length < 6) {
+      return false
     }
-    return false
+
+    return await resetarSenhaUsuario(email, novaSenha)
   }
 
   const obterUsuarioAtual = () => {
     if (!currentUser.value) {
-      const stored = localStorage.getItem('currentUser')
-      if (stored) {
-        currentUser.value = JSON.parse(stored)
-      }
+      currentUser.value = carregarUsuarioPersistido()
     }
     return currentUser.value
   }
 
-  const atualizarPerfil = (name: string, email: string): boolean => {
-    if (currentUser.value) {
-      const userIndex = users.value.findIndex(u => u.id === currentUser.value!.id)
-      if (userIndex !== -1) {
-        users.value[userIndex].name = name
-        users.value[userIndex].email = email
-        currentUser.value.name = name
-        currentUser.value.email = email
-        localStorage.setItem('currentUser', JSON.stringify(currentUser.value))
-        return true
-      }
+  const atualizarPerfil = async (name: string, email: string): Promise<boolean> => {
+    const usuarioAtual = obterUsuarioAtual()
+    if (!usuarioAtual) {
+      return false
     }
-    return false
+
+    const usuarioDb = await findUsuarioById(usuarioAtual.id)
+    if (!usuarioDb) {
+      return false
+    }
+
+    await updateUsuario(name, email, usuarioAtual.password, usuarioAtual.id)
+    currentUser.value = {
+      ...usuarioAtual,
+      name,
+      email,
+    }
+    salvarUsuarioAtual(currentUser.value)
+    return true
   }
 
   return {
@@ -96,6 +137,6 @@ export function useAuth() {
     obterUsuarioAtual,
     atualizarPerfil,
     isAuthenticated,
-    currentUser
+    currentUser,
   }
 }

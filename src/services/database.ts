@@ -6,6 +6,20 @@ let db: SQLiteDBConnection | null = null
 let initialized = false
 const sqLiteConnection = new SQLiteConnection(CapacitorSQLite)
 
+interface UsuarioDB {
+  id: number;
+  nome: string;
+  login: string;
+  senha: string;
+}
+
+interface UsuarioAtual {
+  id: number;
+  name: string;
+  email: string;
+  password: string;
+}
+
 interface Sticker {
   id: number;
   nome: string;
@@ -45,7 +59,28 @@ async function ensureDatabase() {
     nome TEXT,
     foto TEXT,
     raridade TEXT,
-    );`);
+    coletada BOOLEAN NOT NULL DEFAULT FALSE
+    );`,
+  )
+
+  const schemaInfo = await getDb().query(`PRAGMA table_info(figurinhas)`)
+  const hasColetadaColumn = (schemaInfo.values || []).some(
+    (column) => column.name === 'coletada',
+  )
+
+  if (!hasColetadaColumn) {
+    await getDb().execute(
+      `ALTER TABLE figurinhas ADD COLUMN coletada BOOLEAN NOT NULL DEFAULT FALSE`,
+    )
+  }
+
+  await db.execute(`CREATE TABLE IF NOT EXISTS figurinhas_usuario (
+    usuario_id INTEGER NOT NULL,
+    figurinha_id INTEGER NOT NULL,
+    coletada BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (usuario_id, figurinha_id)
+    );`,
+  )
 
 
   const quantidadeFig = await getDb().query(
@@ -72,6 +107,23 @@ function getDb() {
   return db
 }
 
+function obterUsuarioAtualSalvo() {
+  if (typeof localStorage === 'undefined') {
+    return null
+  }
+
+  const armazenado = localStorage.getItem('currentUser')
+  if (!armazenado) {
+    return null
+  }
+
+  try {
+    return JSON.parse(armazenado) as UsuarioAtual
+  } catch {
+    return null
+  }
+}
+
 export async function initDatabase() {
   try {
     await ensureDatabase()
@@ -93,6 +145,24 @@ export async function addUsuario(
   await getDb().run(query, [nome, login, senha])
 }
 
+export async function findUsuarioByLogin(login: string) {
+  await ensureDatabase()
+  const result = await getDb().query(
+    'SELECT id, nome, login, senha FROM usuarios WHERE login = ? COLLATE NOCASE LIMIT 1',
+    [login],
+  )
+  return (result.values?.[0] as UsuarioDB | undefined) ?? null
+}
+
+export async function findUsuarioById(id: number) {
+  await ensureDatabase()
+  const result = await getDb().query(
+    'SELECT id, nome, login, senha FROM usuarios WHERE id = ? LIMIT 1',
+    [id],
+  )
+  return (result.values?.[0] as UsuarioDB | undefined) ?? null
+}
+
 export async function updateUsuario(nome:string, login:string, senha:string, id: number) {
   await ensureDatabase()
   const query = `UPDATE usuarios SET nome = ?, login = ?, senha = ? WHERE id = ?`
@@ -101,9 +171,16 @@ export async function updateUsuario(nome:string, login:string, senha:string, id:
 
 export async function realizarLogin(email: string, senha: string) {
   await ensureDatabase()
-  const query = `SELECT * FROM usuarios WHERE email = ? AND senha = ?`
+  const query = `SELECT id, nome, login, senha FROM usuarios WHERE login = ? COLLATE NOCASE AND senha = ? LIMIT 1`
   const result = await getDb().query(query, [email, senha])
-  return result.values || []
+  return (result.values?.[0] as UsuarioDB | undefined) ?? null
+}
+
+export async function resetarSenhaUsuario(login: string, novaSenha: string) {
+  await ensureDatabase()
+  const query = `UPDATE usuarios SET senha = ? WHERE login = ?`
+  const result = await getDb().run(query, [novaSenha, login])
+  return (result.changes?.changes ?? 0) > 0
 }
 
 export async function addContato(nome: string, email: string, telefone: string) {
@@ -204,26 +281,84 @@ const figurinhasPadrao: Omit<Sticker, "coletada">[] = [
 
 const todasFig = ref<Sticker[]>([]);
 
+async function garantirFigurinhasDoUsuario(usuarioId: number) {
+  const existentes = await getDb().query(
+    'SELECT COUNT(*) as total FROM figurinhas_usuario WHERE usuario_id = ?',
+    [usuarioId],
+  )
+
+  if ((existentes.values?.[0].total ?? 0) > 0) {
+    return
+  }
+
+  const figurinhasLegadas = await getDb().query(
+    'SELECT id, COALESCE(coletada, FALSE) AS coletada FROM figurinhas ORDER BY id',
+  )
+
+  const valoresLegados = figurinhasLegadas.values || []
+
+  for (const figurinha of valoresLegados) {
+    await getDb().run(
+      `INSERT INTO figurinhas_usuario(usuario_id, figurinha_id, coletada) VALUES (?, ?, ?)`,
+      [usuarioId, figurinha.id, figurinha.coletada ? 1 : 0],
+    )
+  }
+
+  if (valoresLegados.some((figurinha) => figurinha.coletada)) {
+    await getDb().run('UPDATE figurinhas SET coletada = FALSE')
+  }
+}
+
 async function carregarFigurinhas() {
   await ensureDatabase();
 
-  const result = await getDb().query(
-    "SELECT * FROM figurinhas ORDER BY id"
-  );
+  const usuarioAtual = obterUsuarioAtualSalvo()
 
-  todasFig.value = (result.values as Sticker[]) || [];
+  if (!usuarioAtual) {
+    const result = await getDb().query(
+      'SELECT id, nome, foto, raridade, FALSE AS coletada FROM figurinhas ORDER BY id',
+    )
+
+    todasFig.value = (result.values as Sticker[]) || []
+    return
+  }
+
+  await garantirFigurinhasDoUsuario(usuarioAtual.id)
+
+  const result = await getDb().query(
+    `SELECT 
+      f.id,
+      f.nome,
+      f.foto,
+      f.raridade,
+      COALESCE(fu.coletada, FALSE) AS coletada
+    FROM figurinhas f
+    LEFT JOIN figurinhas_usuario fu
+      ON fu.figurinha_id = f.id AND fu.usuario_id = ?
+    ORDER BY f.id`,
+    [usuarioAtual.id],
+  )
+
+  todasFig.value = (result.values as Sticker[]) || []
 }
 
 async function toggleColetada(id: number) {
   await ensureDatabase();
 
+  const usuarioAtual = obterUsuarioAtualSalvo()
+  if (!usuarioAtual) {
+    return
+  }
+
+  await garantirFigurinhasDoUsuario(usuarioAtual.id)
+
   const query = `
-  UPDATE figurinhas
+  UPDATE figurinhas_usuario
   SET coletada = NOT coletada
-  WHERE id = ?
+  WHERE usuario_id = ? AND figurinha_id = ?
   `;
 
-  await getDb().run(query, [id]);
+  await getDb().run(query, [usuarioAtual.id, id]);
 
   await carregarFigurinhas();
 }
@@ -231,13 +366,20 @@ async function toggleColetada(id: number) {
 async function apenasColetar(id:number) {
   await ensureDatabase();
 
+  const usuarioAtual = obterUsuarioAtualSalvo()
+  if (!usuarioAtual) {
+    return
+  }
+
+  await garantirFigurinhasDoUsuario(usuarioAtual.id)
+
   const query = `
-  UPDATE figurinhas
+  UPDATE figurinhas_usuario
   SET coletada = TRUE
-  WHERE id = ?
+  WHERE usuario_id = ? AND figurinha_id = ?
   `;
 
-  await getDb().run(query, [id]);
+  await getDb().run(query, [usuarioAtual.id, id]);
 
   await carregarFigurinhas();
 }
@@ -245,13 +387,20 @@ async function apenasColetar(id:number) {
 async function apenasDescoletar(id:number) {
   await ensureDatabase();
 
+  const usuarioAtual = obterUsuarioAtualSalvo()
+  if (!usuarioAtual) {
+    return
+  }
+
+  await garantirFigurinhasDoUsuario(usuarioAtual.id)
+
   const query = `
-  UPDATE figurinhas
+  UPDATE figurinhas_usuario
   SET coletada = FALSE
-  WHERE id = ?
+  WHERE usuario_id = ? AND figurinha_id = ?
   `;
 
-  await getDb().run(query, [id]);
+  await getDb().run(query, [usuarioAtual.id, id]);
 
   await carregarFigurinhas();
 }

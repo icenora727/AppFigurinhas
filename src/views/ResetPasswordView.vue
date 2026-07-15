@@ -56,9 +56,9 @@
           <ion-text class="ion-text-center ion-margin-top">
             <p>
               Lembrou a senha?
-              <router-link to="/login" class="ion-text-primary">
+              <ion-button fill="clear" size="small" @click="irParaLogin" class="ion-no-padding">
                 Faça login
-              </router-link>
+              </ion-button>
             </p>
           </ion-text>
         </ion-card-content>
@@ -148,7 +148,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 
-import { users } from "../composables/useAuth"
+import { findUsuarioByLogin } from '../services/database'
 
 import {
   IonPage,
@@ -205,20 +205,12 @@ const handleRecuperarSenha = async () => {
     return;
   }
 
-  // Dados simulados de usuários (você pode usar seu useAuth aqui)
-  // users pode ser um Ref ou um array; garante que temos o array
-  const usuariosSimulados = (users as any).value ?? users;
-
-  // Buscar o usuário pelo email
-  const usuarioEncontrado = usuariosSimulados.find(
-    (u: { email: string; password: string }) =>
-      u.email.toLowerCase() === email.value.toLowerCase()
-  );
+  const usuarioEncontrado = await findUsuarioByLogin(email.value)
 
   if (usuarioEncontrado) {
     // Mostrar a senha no pop-up
-    emailRecuperado.value = usuarioEncontrado.email;
-    senhaRecuperada.value = usuarioEncontrado.password;
+    emailRecuperado.value = usuarioEncontrado.login;
+    senhaRecuperada.value = usuarioEncontrado.senha;
     isModalOpen.value = true;
 
     // Toast de sucesso
@@ -284,7 +276,7 @@ const irParaLogin = async () => {
 };
 
 const voltarParaLogin = () => {
-  router.back();
+  router.replace('/login');
 };
 
 </script>

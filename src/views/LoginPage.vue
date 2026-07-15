@@ -20,7 +20,7 @@ const handleLogin = async () => {
         return
 }
 
-const sucesso = login(email.value, password.value)
+const sucesso = await login(email.value, password.value)
 
 if (sucesso) {
     const toast = await toastController.create({
@@ -41,6 +41,14 @@ if (sucesso) {
     })
     await toast.present()
   }
+}
+
+const irParaCadastro = async () => {
+  await router.push('/register')
+}
+
+const irParaResetSenha = async () => {
+  await router.push('/reset')
 }
 </script>
 
@@ -81,14 +89,14 @@ if (sucesso) {
       <ion-text class="ion-text-center ion-margin-top">
         <p>
           Não tem conta?
-          <router-link to="/register" class="ion-text-primary">
+          <ion-button fill="clear" size="small" @click="irParaCadastro" class="ion-no-padding">
             Cadastre-se
-          </router-link>
+          </ion-button>
         </p>
         <p>
-          <router-link to="/reset" class="ion-text-primary">
+          <ion-button fill="clear" size="small" @click="irParaResetSenha" class="ion-no-padding">
             Esqueceu a senha?
-          </router-link>
+          </ion-button>
         </p>
       </ion-text>
     </ion-card-content>

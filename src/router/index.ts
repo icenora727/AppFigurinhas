@@ -1,10 +1,31 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
 
+function possuiUsuarioAutenticado() {
+  if (typeof localStorage === 'undefined') {
+    return false
+  }
+
+  const currentUser = localStorage.getItem('currentUser')
+  return !!currentUser
+}
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
     redirect: '/login'
+  },
+  {
+    path: '/home',
+    redirect: '/tabs/home',
+  },
+  {
+    path: '/album',
+    redirect: '/tabs/album',
+  },
+  {
+    path: '/profile',
+    redirect: '/tabs/profile',
   },
   {
     path: '/login',
@@ -53,6 +74,21 @@ const routes: Array<RouteRecordRaw> = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes
+})
+
+router.beforeEach((to) => {
+  const autenticado = possuiUsuarioAutenticado()
+  const rotaPublica = ['/login', '/register', '/reset']
+
+  if (to.path.startsWith('/tabs') && !autenticado) {
+    return '/login'
+  }
+
+  if (rotaPublica.includes(to.path) && autenticado) {
+    return '/tabs/home'
+  }
+
+  return true
 })
 
 export default router

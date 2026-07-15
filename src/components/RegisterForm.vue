@@ -67,9 +67,9 @@
       <ion-text class="ion-text-center ion-margin-top">
         <p>
           Já tem conta?
-          <router-link to="/login" class="ion-text-primary">
+          <ion-button fill="clear" size="small" @click="irParaLogin" class="ion-no-padding">
             Faça login
-          </router-link>
+          </ion-button>
         </p>
       </ion-text>
     </ion-card-content>
@@ -121,7 +121,7 @@ const handleRegister = async () => {
     return
   }
 
-  const resultado = cadastrar(name.value, email.value, password.value)
+  const resultado = await cadastrar(name.value, email.value, password.value)
 
   if (resultado) {
     sucesso.value = 'Cadastro realizado com sucesso! Redirecionando...'
@@ -133,7 +133,7 @@ const handleRegister = async () => {
     })
     await toast.present()
     setTimeout(() => {
-      router.push('/album')
+      router.replace('/tabs/album')
     }, 1500)
   } else {
     erro.value = 'Este e-mail já está cadastrado'
@@ -145,5 +145,9 @@ const handleRegister = async () => {
     })
     await toast.present()
   }
+}
+
+const irParaLogin = async () => {
+  await router.replace('/login')
 }
 </script>
