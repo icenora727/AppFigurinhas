@@ -16,10 +16,6 @@ const routes: Array<RouteRecordRaw> = [
     redirect: '/login'
   },
   {
-    path: '/home',
-    redirect: '/tabs/home',
-  },
-  {
     path: '/album',
     redirect: '/tabs/album',
   },
@@ -62,6 +58,10 @@ const routes: Array<RouteRecordRaw> = [
       {
         path: 'tab1',
         component: () => import('@/views/Tab1Page.vue')
+      },
+      {
+        path: 'sobre',
+        component: () => import('@/views/SobrePage.vue')
       }
     ]
   }
@@ -81,7 +81,7 @@ router.beforeEach((to) => {
   }
 
   if (rotaPublica.includes(to.path) && autenticado) {
-    return '/tabs/home'
+    return '/tabs/album'
   }
 
   return true
