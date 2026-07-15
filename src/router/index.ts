@@ -81,7 +81,7 @@ router.beforeEach((to) => {
   }
 
   if (rotaPublica.includes(to.path) && autenticado) {
-    return '/tabs/home'
+    return '/tabs/album'
   }
 
   return true
