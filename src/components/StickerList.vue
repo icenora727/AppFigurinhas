@@ -14,7 +14,7 @@
 
     <ion-searchbar
       v-model="termoPesquisa"
-      placeholder="Pesquisar por jogador ou seleção..."
+      placeholder="Pesquisar por brainrot ou raridade..."
       @ion-input="pesquisar(termoPesquisa)"
       class="ion-margin"
     ></ion-searchbar>
