@@ -45,11 +45,7 @@ const routes: Array<RouteRecordRaw> = [
     children: [
       {
         path: "",
-        redirect: "/tabs/home"
-      },
-      {
-        path: 'home',
-        component: () => import('../views/HomePage.vue')
+        redirect: "/tabs/album"
       },
       {
         path: 'album',
