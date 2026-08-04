@@ -15,6 +15,7 @@ import {
   IonText,
   IonTitle,
   IonToolbar,
+  onIonViewWillEnter,
 } from '@ionic/vue'
 import { checkmarkCircleOutline, lockClosedOutline, sparklesOutline } from 'ionicons/icons'
 import { computed } from 'vue'
@@ -28,6 +29,10 @@ const {
 } = useConquistas()
 
 const totalConquistas = computed(() => conquistasUsuario.value.length)
+
+onIonViewWillEnter(() => {
+  atualizarConquistas()
+})
 </script>
 
 <template>

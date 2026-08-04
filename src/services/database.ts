@@ -1,5 +1,5 @@
 import { CapacitorSQLite, SQLiteConnection, SQLiteDBConnection } from '@capacitor-community/sqlite'
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
  
 const dbName = 'banco'
 let db: SQLiteDBConnection | null = null
@@ -39,6 +39,16 @@ interface AchievementDB {
 interface AchievementView extends AchievementDB {
   desbloqueada: boolean;
   desbloqueadaEm: string | null;
+}
+
+const ACHIEVEMENTS_UPDATED_EVENT = 'appfigurinhas:achievements-updated'
+
+function notificarConquistasAtualizadas() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  window.dispatchEvent(new CustomEvent(ACHIEVEMENTS_UPDATED_EVENT))
 }
 
 async function ensureDatabase() {
@@ -113,6 +123,8 @@ async function ensureDatabase() {
     PRIMARY KEY (usuario_id, figurinha_id)
     );`,
   )
+
+  await removerConquistasObsoletas()
 
 
   const quantidadeFig = await getDb().query(
@@ -321,58 +333,42 @@ const conquistasPadrao: Omit<AchievementDB, 'id'>[] = [
   {
     codigo: 'iniciante',
     nome: 'Iniciante',
-    descricao: 'Colete 10 figurinhas.',
+    descricao: 'Colete 3 figurinhas.',
     ordem: 2,
   },
   {
     codigo: 'colecionador',
     nome: 'Colecionador',
-    descricao: 'Colete 25 figurinhas.',
+    descricao: 'Colete 5 figurinhas.',
     ordem: 3,
   },
   {
     codigo: 'album-em-construcao',
     nome: 'Álbum em Construção',
-    descricao: 'Colete 50 figurinhas.',
+    descricao: 'Colete 8 figurinhas.',
     ordem: 4,
   },
   {
     codigo: 'cacador-de-raras',
     nome: 'Caçador de Raras',
-    descricao: 'Colete 5 figurinhas raras.',
+    descricao: 'Colete 3 figurinhas raras.',
     ordem: 5,
   },
   {
     codigo: 'especialista-em-raras',
     nome: 'Especialista em Raras',
-    descricao: 'Colete 15 figurinhas raras.',
+    descricao: 'Colete 5 figurinhas raras.',
     ordem: 6,
-  },
-  {
-    codigo: 'brilho-inicial',
-    nome: 'Brilho Inicial',
-    descricao: 'Colete 3 figurinhas brilhantes.',
-    ordem: 7,
-  },
-  {
-    codigo: 'mestre-das-brilhantes',
-    nome: 'Mestre das Brilhantes',
-    descricao: 'Colete 10 figurinhas brilhantes.',
-    ordem: 8,
-  },
-  {
-    codigo: 'album-quase-completo',
-    nome: 'Álbum Quase Completo',
-    descricao: 'Complete 80% do álbum.',
-    ordem: 9,
   },
   {
     codigo: 'campeao-da-copa',
     nome: 'Campeão da Copa',
     descricao: 'Complete 100% do álbum.',
-    ordem: 10,
+    ordem: 7,
   },
 ]
+
+const codigosConquistasAtuais = conquistasPadrao.map((conquista) => conquista.codigo)
 
 const todasFig = ref<Sticker[]>([]);
 
@@ -412,6 +408,27 @@ async function garantirConquistasPadrao() {
       [conquista.codigo, conquista.nome, conquista.descricao, conquista.ordem],
     )
   }
+}
+
+async function removerConquistasObsoletas() {
+  if (codigosConquistasAtuais.length === 0) {
+    return
+  }
+
+  const placeholders = codigosConquistasAtuais.map(() => '?').join(', ')
+
+  await getDb().run(
+    `DELETE FROM user_achievements
+     WHERE achievement_id IN (
+       SELECT id FROM achievements WHERE codigo NOT IN (${placeholders})
+     )`,
+    codigosConquistasAtuais,
+  )
+
+  await getDb().run(
+    `DELETE FROM achievements WHERE codigo NOT IN (${placeholders})`,
+    codigosConquistasAtuais,
+  )
 }
 
 async function contarFigurinhasColetadas(usuarioId: number) {
@@ -493,6 +510,8 @@ async function sincronizarConquistasUsuario(usuarioId: number) {
       [usuarioId, conquista.id],
     )
   }
+
+  notificarConquistasAtualizadas()
 }
 
 async function listarConquistasDoUsuario(usuarioId: number) {
@@ -533,7 +552,6 @@ async function carregarFigurinhas() {
   }
 
   await garantirFigurinhasDoUsuario(usuarioAtual.id)
-  await sincronizarConquistasUsuario(usuarioAtual.id)
 
   const result = await getDb().query(
     `SELECT 
@@ -570,6 +588,10 @@ async function toggleColetada(id: number) {
 
   await getDb().run(query, [usuarioAtual.id, id]);
 
+  void sincronizarConquistasUsuario(usuarioAtual.id).catch((error) => {
+    console.error('Erro ao sincronizar conquistas', error)
+  })
+
   await carregarFigurinhas();
 }
 
@@ -591,6 +613,10 @@ async function apenasColetar(id:number) {
 
   await getDb().run(query, [usuarioAtual.id, id]);
 
+  void sincronizarConquistasUsuario(usuarioAtual.id).catch((error) => {
+    console.error('Erro ao sincronizar conquistas', error)
+  })
+
   await carregarFigurinhas();
 }
 
@@ -611,6 +637,10 @@ async function apenasDescoletar(id:number) {
   `;
 
   await getDb().run(query, [usuarioAtual.id, id]);
+
+  void sincronizarConquistasUsuario(usuarioAtual.id).catch((error) => {
+    console.error('Erro ao sincronizar conquistas', error)
+  })
 
 
   await carregarFigurinhas();
@@ -719,6 +749,22 @@ export function useConquistas() {
     await carregarConquistas()
   })
 
+  if (typeof window !== 'undefined') {
+    const atualizarQuandoNotificado = () => {
+      void carregarConquistas()
+    }
+
+    window.addEventListener(ACHIEVEMENTS_UPDATED_EVENT, atualizarQuandoNotificado)
+
+    onUnmounted(() => {
+      window.removeEventListener(ACHIEVEMENTS_UPDATED_EVENT, atualizarQuandoNotificado)
+    })
+  }
+
+  const recarregarConquistas = async () => {
+    await carregarConquistas()
+  }
+
   const conquistasDesbloqueadas = computed(
     () => conquistasUsuario.value.filter((conquista) => conquista.desbloqueada).length,
   )
@@ -733,14 +779,10 @@ export function useConquistas() {
     )
   })
 
-  const atualizarConquistas = async () => {
-    await carregarConquistas()
-  }
-
   return {
     conquistasUsuario,
     conquistasDesbloqueadas,
     percentualConquistas,
-    atualizarConquistas,
+    atualizarConquistas: recarregarConquistas,
   }
 }
