@@ -28,6 +28,19 @@ interface Sticker {
   coletada: boolean;
 }
 
+interface AchievementDB {
+  id: number;
+  codigo: string;
+  nome: string;
+  descricao: string;
+  ordem: number;
+}
+
+interface AchievementView extends AchievementDB {
+  desbloqueada: boolean;
+  desbloqueadaEm: string | null;
+}
+
 async function ensureDatabase() {
   if (initialized && db) {
     return
@@ -53,6 +66,25 @@ async function ensureDatabase() {
     senha TEXT
     );`,
   )
+
+  await db.execute(`CREATE TABLE IF NOT EXISTS achievements (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    codigo TEXT NOT NULL UNIQUE,
+    nome TEXT NOT NULL,
+    descricao TEXT NOT NULL,
+    ordem INTEGER NOT NULL
+    );`,
+  )
+
+  await db.execute(`CREATE TABLE IF NOT EXISTS user_achievements (
+    usuario_id INTEGER NOT NULL,
+    achievement_id INTEGER NOT NULL,
+    desbloqueada_em TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (usuario_id, achievement_id)
+    );`,
+  )
+
+  await garantirConquistasPadrao()
 
   await db.execute(`CREATE TABLE IF NOT EXISTS figurinhas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -279,6 +311,69 @@ const figurinhasPadrao: Omit<Sticker, "coletada">[] = [
   },
 ];
 
+const conquistasPadrao: Omit<AchievementDB, 'id'>[] = [
+  {
+    codigo: 'primeira-figurinha',
+    nome: 'Primeira Figurinha',
+    descricao: 'Desbloqueie ao coletar a primeira figurinha do brainrot.',
+    ordem: 1,
+  },
+  {
+    codigo: 'iniciante',
+    nome: 'Iniciante',
+    descricao: 'Colete 10 figurinhas.',
+    ordem: 2,
+  },
+  {
+    codigo: 'colecionador',
+    nome: 'Colecionador',
+    descricao: 'Colete 25 figurinhas.',
+    ordem: 3,
+  },
+  {
+    codigo: 'album-em-construcao',
+    nome: 'Álbum em Construção',
+    descricao: 'Colete 50 figurinhas.',
+    ordem: 4,
+  },
+  {
+    codigo: 'cacador-de-raras',
+    nome: 'Caçador de Raras',
+    descricao: 'Colete 5 figurinhas raras.',
+    ordem: 5,
+  },
+  {
+    codigo: 'especialista-em-raras',
+    nome: 'Especialista em Raras',
+    descricao: 'Colete 15 figurinhas raras.',
+    ordem: 6,
+  },
+  {
+    codigo: 'brilho-inicial',
+    nome: 'Brilho Inicial',
+    descricao: 'Colete 3 figurinhas brilhantes.',
+    ordem: 7,
+  },
+  {
+    codigo: 'mestre-das-brilhantes',
+    nome: 'Mestre das Brilhantes',
+    descricao: 'Colete 10 figurinhas brilhantes.',
+    ordem: 8,
+  },
+  {
+    codigo: 'album-quase-completo',
+    nome: 'Álbum Quase Completo',
+    descricao: 'Complete 80% do álbum.',
+    ordem: 9,
+  },
+  {
+    codigo: 'campeao-da-copa',
+    nome: 'Campeão da Copa',
+    descricao: 'Complete 100% do álbum.',
+    ordem: 10,
+  },
+]
+
 const todasFig = ref<Sticker[]>([]);
 
 async function garantirFigurinhasDoUsuario(usuarioId: number) {
@@ -309,6 +404,120 @@ async function garantirFigurinhasDoUsuario(usuarioId: number) {
   }
 }
 
+async function garantirConquistasPadrao() {
+  for (const conquista of conquistasPadrao) {
+    await getDb().run(
+      `INSERT OR IGNORE INTO achievements(codigo, nome, descricao, ordem)
+      VALUES (?, ?, ?, ?)`,
+      [conquista.codigo, conquista.nome, conquista.descricao, conquista.ordem],
+    )
+  }
+}
+
+async function contarFigurinhasColetadas(usuarioId: number) {
+  const resultado = await getDb().query(
+    'SELECT COUNT(*) as total FROM figurinhas_usuario WHERE usuario_id = ? AND coletada = TRUE',
+    [usuarioId],
+  )
+
+  return Number(resultado.values?.[0].total ?? 0)
+}
+
+async function contarFigurinhasRaras(usuarioId: number) {
+  const resultado = await getDb().query(
+    `SELECT COUNT(*) as total
+    FROM figurinhas_usuario fu
+    INNER JOIN figurinhas f ON f.id = fu.figurinha_id
+    WHERE fu.usuario_id = ?
+      AND fu.coletada = TRUE
+      AND LOWER(f.raridade) IN ('raro', 'rara', 'lendario', 'lendário', 'secreto', 'secreta')`,
+    [usuarioId],
+  )
+
+  return Number(resultado.values?.[0].total ?? 0)
+}
+
+async function contarPercentualAlbum(usuarioId: number) {
+  const resultado = await getDb().query(
+    `SELECT
+      COUNT(*) as total,
+      SUM(CASE WHEN coletada = TRUE THEN 1 ELSE 0 END) as coletadas
+    FROM figurinhas_usuario
+    WHERE usuario_id = ?`,
+    [usuarioId],
+  )
+
+  const total = Number(resultado.values?.[0].total ?? 0)
+  const coletadas = Number(resultado.values?.[0].coletadas ?? 0)
+
+  if (total === 0) {
+    return 0
+  }
+
+  return Math.round((coletadas * 100) / total)
+}
+
+async function sincronizarConquistasUsuario(usuarioId: number) {
+  await garantirConquistasPadrao()
+
+  const [quantidadeColetadas, quantidadeRaras, percentualAlbum] = await Promise.all([
+    contarFigurinhasColetadas(usuarioId),
+    contarFigurinhasRaras(usuarioId),
+    contarPercentualAlbum(usuarioId),
+  ])
+
+  const conquistas = await getDb().query(
+    'SELECT id, codigo, nome, descricao, ordem FROM achievements ORDER BY ordem ASC, id ASC',
+  )
+
+  for (const conquista of (conquistas.values || []) as AchievementDB[]) {
+    const desbloqueada =
+      (conquista.codigo === 'primeira-figurinha' && quantidadeColetadas >= 1) ||
+      (conquista.codigo === 'iniciante' && quantidadeColetadas >= 10) ||
+      (conquista.codigo === 'colecionador' && quantidadeColetadas >= 25) ||
+      (conquista.codigo === 'album-em-construcao' && quantidadeColetadas >= 50) ||
+      (conquista.codigo === 'cacador-de-raras' && quantidadeRaras >= 5) ||
+      (conquista.codigo === 'especialista-em-raras' && quantidadeRaras >= 15) ||
+      (conquista.codigo === 'brilho-inicial' && quantidadeColetadas >= 3) ||
+      (conquista.codigo === 'mestre-das-brilhantes' && quantidadeColetadas >= 10) ||
+      (conquista.codigo === 'album-quase-completo' && percentualAlbum >= 80) ||
+      (conquista.codigo === 'campeao-da-copa' && percentualAlbum >= 100)
+
+    if (!desbloqueada) {
+      continue
+    }
+
+    await getDb().run(
+      `INSERT OR IGNORE INTO user_achievements(usuario_id, achievement_id, desbloqueada_em)
+      VALUES (?, ?, CURRENT_TIMESTAMP)`,
+      [usuarioId, conquista.id],
+    )
+  }
+}
+
+async function listarConquistasDoUsuario(usuarioId: number) {
+  await garantirConquistasPadrao()
+  await sincronizarConquistasUsuario(usuarioId)
+
+  const resultado = await getDb().query(
+    `SELECT
+      a.id,
+      a.codigo,
+      a.nome,
+      a.descricao,
+      a.ordem,
+      CASE WHEN ua.usuario_id IS NULL THEN 0 ELSE 1 END AS desbloqueada,
+      ua.desbloqueada_em AS desbloqueadaEm
+    FROM achievements a
+    LEFT JOIN user_achievements ua
+      ON ua.achievement_id = a.id AND ua.usuario_id = ?
+    ORDER BY a.ordem ASC, a.id ASC`,
+    [usuarioId],
+  )
+
+  return (resultado.values || []) as AchievementView[]
+}
+
 async function carregarFigurinhas() {
   await ensureDatabase();
 
@@ -324,6 +533,7 @@ async function carregarFigurinhas() {
   }
 
   await garantirFigurinhasDoUsuario(usuarioAtual.id)
+  await sincronizarConquistasUsuario(usuarioAtual.id)
 
   const result = await getDb().query(
     `SELECT 
@@ -401,6 +611,7 @@ async function apenasDescoletar(id:number) {
   `;
 
   await getDb().run(query, [usuarioAtual.id, id]);
+
 
   await carregarFigurinhas();
 }
@@ -486,5 +697,50 @@ export function useAlbum() {
     marcarPendente,
     pesquisar,
     definirFiltro,
+  }
+}
+
+const conquistasUsuario = ref<AchievementView[]>([])
+
+export function useConquistas() {
+  const carregarConquistas = async () => {
+    await ensureDatabase()
+
+    const usuarioAtual = obterUsuarioAtualSalvo()
+    if (!usuarioAtual) {
+      conquistasUsuario.value = []
+      return
+    }
+
+    conquistasUsuario.value = await listarConquistasDoUsuario(usuarioAtual.id)
+  }
+
+  onMounted(async () => {
+    await carregarConquistas()
+  })
+
+  const conquistasDesbloqueadas = computed(
+    () => conquistasUsuario.value.filter((conquista) => conquista.desbloqueada).length,
+  )
+
+  const percentualConquistas = computed(() => {
+    if (conquistasUsuario.value.length === 0) {
+      return 0
+    }
+
+    return Math.round(
+      (conquistasDesbloqueadas.value * 100) / conquistasUsuario.value.length,
+    )
+  })
+
+  const atualizarConquistas = async () => {
+    await carregarConquistas()
+  }
+
+  return {
+    conquistasUsuario,
+    conquistasDesbloqueadas,
+    percentualConquistas,
+    atualizarConquistas,
   }
 }

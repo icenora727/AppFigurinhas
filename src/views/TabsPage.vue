@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { IonIcon, IonLabel, IonPage, IonRouterOutlet, IonTabBar, IonTabButton, IonTabs } from '@ionic/vue';
-import { checkboxOutline, personOutline, personCircle } from 'ionicons/icons';
+import { checkboxOutline, informationCircleOutline, personOutline, trophyOutline } from 'ionicons/icons';
 
 </script>
 
@@ -15,20 +15,16 @@ import { checkboxOutline, personOutline, personCircle } from 'ionicons/icons';
                     <IonIcon :icon="checkboxOutline" />
                     <IonLabel>Álbum</IonLabel>
                 </IonTabButton>
+                <IonTabButton tab="conquistas" href="/tabs/conquistas">
+                    <IonIcon :icon="trophyOutline" />
+                    <IonLabel>Conquistas</IonLabel>
+                </IonTabButton>
                 <IonTabButton tab="profile" href="/tabs/profile">
                     <IonIcon :icon="personOutline" />
                     <IonLabel>Profile</IonLabel>
                 </IonTabButton>
-                <IonTabButton tab="tab2" href="/tabs/tab2">
-                    <IonIcon :icon="personCircle" />
-                    <IonLabel>Tab2</IonLabel>
-                </IonTabButton>
-                <IonTabButton tab="tab1" href="/tabs/tab1">
-                    <IonIcon :icon="personCircle" />
-                    <IonLabel>Tab1</IonLabel>
-                </IonTabButton>
                 <IonTabButton tab="sobre" href="/tabs/sobre">
-                    <IonIcon :icon="personCircle" />
+                    <IonIcon :icon="informationCircleOutline" />
                     <IonLabel>Sobre</IonLabel>
                 </IonTabButton>
 

@@ -48,6 +48,10 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('../views/AlbumPage.vue')
       },
       {
+        path: 'conquistas',
+        component: () => import('../views/ConquistasPage.vue')
+      },
+      {
         path: 'profile',
         component: () => import('../views/ProfilePage.vue')
       },
