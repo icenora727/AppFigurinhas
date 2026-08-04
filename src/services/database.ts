@@ -344,8 +344,8 @@ const conquistasPadrao: Omit<AchievementDB, 'id'>[] = [
   },
   {
     codigo: 'album-em-construcao',
-    nome: 'Álbum em Construção',
-    descricao: 'Colete 8 figurinhas.',
+    nome: 'Álbum em Progresso',
+    descricao: 'Colete 7 figurinhas.',
     ordem: 4,
   },
   {
@@ -356,13 +356,13 @@ const conquistasPadrao: Omit<AchievementDB, 'id'>[] = [
   },
   {
     codigo: 'especialista-em-raras',
-    nome: 'Especialista em Raras',
+    nome: 'Especialista nas Raras',
     descricao: 'Colete 5 figurinhas raras.',
     ordem: 6,
   },
   {
-    codigo: 'campeao-da-copa',
-    nome: 'Campeão da Copa',
+    codigo: 'campeao-dos-brainrots',
+    nome: 'Campeão dos Brainrots',
     descricao: 'Complete 100% do álbum.',
     ordem: 7,
   },
@@ -490,15 +490,13 @@ async function sincronizarConquistasUsuario(usuarioId: number) {
   for (const conquista of (conquistas.values || []) as AchievementDB[]) {
     const desbloqueada =
       (conquista.codigo === 'primeira-figurinha' && quantidadeColetadas >= 1) ||
-      (conquista.codigo === 'iniciante' && quantidadeColetadas >= 10) ||
-      (conquista.codigo === 'colecionador' && quantidadeColetadas >= 25) ||
-      (conquista.codigo === 'album-em-construcao' && quantidadeColetadas >= 50) ||
-      (conquista.codigo === 'cacador-de-raras' && quantidadeRaras >= 5) ||
-      (conquista.codigo === 'especialista-em-raras' && quantidadeRaras >= 15) ||
-      (conquista.codigo === 'brilho-inicial' && quantidadeColetadas >= 3) ||
-      (conquista.codigo === 'mestre-das-brilhantes' && quantidadeColetadas >= 10) ||
+      (conquista.codigo === 'iniciante' && quantidadeColetadas >= 3) ||
+      (conquista.codigo === 'colecionador' && quantidadeColetadas >= 5) ||
+      (conquista.codigo === 'album-em-construcao' && quantidadeColetadas >= 7) ||
+      (conquista.codigo === 'cacador-de-raras' && quantidadeRaras >= 3) ||
+      (conquista.codigo === 'especialista-em-raras' && quantidadeRaras >= 5) ||
       (conquista.codigo === 'album-quase-completo' && percentualAlbum >= 80) ||
-      (conquista.codigo === 'campeao-da-copa' && percentualAlbum >= 100)
+      (conquista.codigo === 'campeao-dos-brainrots' && percentualAlbum >= 100)
 
     if (!desbloqueada) {
       continue
