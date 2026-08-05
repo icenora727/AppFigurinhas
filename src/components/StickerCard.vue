@@ -31,12 +31,24 @@
           <ion-icon slot="start" :icon="!sticker.coletada ? alertCircle : ellipseOutline"></ion-icon>
           Pendente
         </ion-button>
+        <ion-button
+          expand="block"
+          @click.stop="handleMarcarFavorita"
+          :color="sticker.favorita ? 'danger' : 'medium'"
+          size="small"
+        >
+          <ion-icon slot="start" :icon="sticker.favorita ? heart : heartOutline"></ion-icon>
+          Favorita
+        </ion-button>
       </div>
 
       <ion-badge v-if="sticker.coletada" color="success" class="ion-margin-top">
         ✓ Coletada
       </ion-badge>
-      <ion-badge v-else color="warning" class="ion-margin-top">
+      <ion-badge v-if="sticker.favorita" color="danger" class="ion-margin-top ion-margin-start">
+        ❤ Favorita
+      </ion-badge>
+      <ion-badge v-if="!sticker.coletada" color="warning" class="ion-margin-top ion-margin-start">
         ○ Pendente
       </ion-badge>
     </ion-card-content>
@@ -56,7 +68,7 @@ import {
   IonImg,
   IonBadge
 } from '@ionic/vue'
-import { checkmarkCircle, alertCircle, ellipseOutline } from 'ionicons/icons'
+import { checkmarkCircle, alertCircle, ellipseOutline, heart, heartOutline } from 'ionicons/icons'
 
 interface Sticker {
   id: string
@@ -64,6 +76,7 @@ interface Sticker {
   raridade: string
   foto: string
   coletada: boolean
+  favorita: boolean
 }
 
 const props = defineProps<{
@@ -78,6 +91,7 @@ const emit = defineEmits<{
   toggle: [id: string]
   marcarColetada: [id: string]
   marcarPendente: [id: string]
+  marcarFavorita: [id: string]
 }>()
 
 const handleToggle = () => {
@@ -90,6 +104,10 @@ const handleMarcarColetada = () => {
 
 const handleMarcarPendente = () => {
   emit('marcarPendente', props.sticker.id)
+}
+
+const handleMarcarFavorita = () => {
+  emit('marcarFavorita', props.sticker.id)
 }
 </script>
 

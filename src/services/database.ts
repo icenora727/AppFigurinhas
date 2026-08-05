@@ -26,6 +26,7 @@ interface Sticker {
   foto: string;
   raridade: string;
   coletada: boolean;
+  favorita: boolean;
 }
 
 interface AchievementDB {
@@ -120,9 +121,21 @@ async function ensureDatabase() {
     usuario_id INTEGER NOT NULL,
     figurinha_id INTEGER NOT NULL,
     coletada BOOLEAN NOT NULL DEFAULT FALSE,
+    favorita BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (usuario_id, figurinha_id)
     );`,
   )
+
+  const figurinhasUsuarioInfo = await getDb().query(`PRAGMA table_info(figurinhas_usuario)`)
+  const hasFavoritaColumn = (figurinhasUsuarioInfo.values || []).some(
+    (column) => column.name === 'favorita',
+  )
+
+  if (!hasFavoritaColumn) {
+    await getDb().execute(
+      `ALTER TABLE figurinhas_usuario ADD COLUMN favorita BOOLEAN NOT NULL DEFAULT FALSE`,
+    )
+  }
 
   await removerConquistasObsoletas()
 
@@ -260,7 +273,7 @@ export async function findContatoById(id:number) {
 
 // ======================= FIGURINHAS ==============================
 
-const figurinhasPadrao: Omit<Sticker, "coletada">[] = [
+const figurinhasPadrao: Omit<Sticker, "coletada" | "favorita">[] = [
   {
     id: 1,
     nome: "Tung Tung Tung Sahur",
@@ -542,7 +555,7 @@ async function carregarFigurinhas() {
 
   if (!usuarioAtual) {
     const result = await getDb().query(
-      'SELECT id, nome, foto, raridade, FALSE AS coletada FROM figurinhas ORDER BY id',
+      'SELECT id, nome, foto, raridade, FALSE AS coletada, FALSE AS favorita FROM figurinhas ORDER BY id',
     )
 
     todasFig.value = (result.values as Sticker[]) || []
@@ -557,7 +570,8 @@ async function carregarFigurinhas() {
       f.nome,
       f.foto,
       f.raridade,
-      COALESCE(fu.coletada, FALSE) AS coletada
+      COALESCE(fu.coletada, FALSE) AS coletada,
+      COALESCE(fu.favorita, FALSE) AS favorita
     FROM figurinhas f
     LEFT JOIN figurinhas_usuario fu
       ON fu.figurinha_id = f.id AND fu.usuario_id = ?
@@ -644,9 +658,30 @@ async function apenasDescoletar(id:number) {
   await carregarFigurinhas();
 }
 
+async function alternarFavorita(id: number) {
+  await ensureDatabase()
+
+  const usuarioAtual = obterUsuarioAtualSalvo()
+  if (!usuarioAtual) {
+    return
+  }
+
+  await garantirFigurinhasDoUsuario(usuarioAtual.id)
+
+  const query = `
+  UPDATE figurinhas_usuario
+  SET favorita = NOT favorita
+  WHERE usuario_id = ? AND figurinha_id = ?
+  `
+
+  await getDb().run(query, [usuarioAtual.id, id])
+
+  await carregarFigurinhas()
+}
+
 // ======================= PESQUISA E FILTRO ==============================
 
-const filtroAtual = ref<"todas" | "coletadas" | "pendentes">("todas");
+const filtroAtual = ref<"todas" | "coletadas" | "pendentes" | "favoritas">("todas");
 const termoPesquisa = ref("");
 
 const figurinhasFiltradas = computed(() => {
@@ -656,6 +691,8 @@ const figurinhasFiltradas = computed(() => {
     resultado = resultado.filter((f) => f.coletada);
   } else if (filtroAtual.value === "pendentes") {
     resultado = resultado.filter((f) => !f.coletada);
+  } else if (filtroAtual.value === "favoritas") {
+    resultado = resultado.filter((f) => f.favorita);
   }
 
   if (termoPesquisa.value) {
@@ -684,7 +721,7 @@ const percentualCompleto = computed(() => {
   )
 })
 
-// ======================= EXPORT ==============================
+// =====================================================
 
 export function useAlbum() {
   onMounted(async () => {
@@ -704,11 +741,15 @@ export function useAlbum() {
     await apenasDescoletar(id);
   };
 
+  const marcarFavorita = async (id: number) => {
+    await alternarFavorita(id);
+  };
+
   const pesquisar = (termo: string) => {
     termoPesquisa.value = termo;
   };
 
-  const definirFiltro = (filtro: "todas" | "coletadas" | "pendentes") => {
+  const definirFiltro = (filtro: "todas" | "coletadas" | "pendentes" | "favoritas") => {
     filtroAtual.value = filtro;
   };
 
@@ -723,6 +764,7 @@ export function useAlbum() {
     alternarColetada,
     marcarColetada,
     marcarPendente,
+    marcarFavorita,
     pesquisar,
     definirFiltro,
   }

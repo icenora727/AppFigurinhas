@@ -10,6 +10,9 @@
       <ion-segment-button value="pendentes">
         <ion-label>Pendentes ({{ qtdTodasFig - qtdFigurinhasColetadas }})</ion-label>
       </ion-segment-button>
+      <ion-segment-button value="favoritas">
+        <ion-label>Favoritas</ion-label>
+      </ion-segment-button>
     </ion-segment>
 
     <ion-searchbar
@@ -27,6 +30,7 @@
             @toggle="alternarColetada"
             @marcar-coletada="marcarColetada"
             @marcar-pendente="marcarPendente"
+            @marcar-favorita="marcarFavorita"
           />
         </ion-col>
       </ion-row>
@@ -61,6 +65,7 @@ const {
   qtdFigurinhasColetadas,
   marcarColetada,
   marcarPendente,
+  marcarFavorita,
   alternarColetada,
   definirFiltro,
   pesquisar
